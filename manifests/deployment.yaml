@@ -14,22 +14,22 @@ spec:
     metadata:
       labels:
         app: django
-      annotations:
-        # sidecar.istio.io/rewriteAppHTTPProbers: "false"
-        traffic.sidecar.istio.io/excludeOutboundPorts: "5432"
+      # annotations:
+      #   # sidecar.istio.io/rewriteAppHTTPProbers: "false"
+      #   traffic.sidecar.istio.io/excludeOutboundPorts: "5432"
     spec:
       containers:
       - name: django
         image: ghcr.io/abin-tiger/django-startproject:main
-        livenessProbe:
-          httpGet:
-            # path: /
-            port: 8000
-        readinessProbe:
-          tcpSocket:
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
+        # livenessProbe:
+        #   httpGet:
+        #     # path: /
+        #     port: 8000
+        # readinessProbe:
+        #   tcpSocket:
+        #     port: 8000
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
         env:
           - name: "POSTGRES_HOST"
             value: "postgresql"
@@ -39,32 +39,36 @@ spec:
             value: "password9987"
         ports:
         - containerPort: 8000
-# ---
-# apiVersion: networking.istio.io/v1alpha3
-# kind: VirtualService
-# metadata:
-#   name: postgres-vs
-# spec:
-#   hosts:
-#   - "postgresql-server"
-#   tcp:
-#   - match:
-#     - port: 5432
-#     route:
-#     - destination:
-#         host: "postgresql.django-startproject.svc.cluster.local"
-#         port:
-#           number: 5432
-# ---
-# apiVersion: networking.istio.io/v1alpha3
-# kind: ServiceEntry
-# metadata:
-#   name: sql-replica
-# spec:
-#    hosts:
-#      - "postgresql.django-startproject.svc.cluster.local"
-#    ports:
-#      - number: 5432
-#        name: tcp
-#        protocol: TCP
-#    location: MESH_EXTERNAL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-startproject
+  namespace: django-startproject
+  labels:
+    app: django
+    service: django
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: django
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: django
+  namespace: django-startproject
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - istio-system/default-gateway
+  http:
+  - route:
+    - destination:
+        host: django-startproject
+        port:
+          number: 8000
