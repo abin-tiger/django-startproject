@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-startproject
+  labels:
+    app: django-startproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - name: django
+        image: ghcr.io/abin-tiger/django-startproject:main
+        env:
+          - name: "POSTGRES_HOST"
+            value: "postgresql"
+          - name: "POSTGRES_PORT"
+            value: "5432"
+          - name: "POSTGRES_PASSWORD"
+            value: "password9987"
+        ports:
+        - containerPort: 8000
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: postgres-vs
+# spec:
+#   hosts:
+#   - "postgresql-server"
+#   tcp:
+#   - match:
+#     - port: 5432
+#     route:
+#     - destination:
+#         host: "postgresql.django-startproject.svc.cluster.local"
+#         port:
+#           number: 5432
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: ServiceEntry
+# metadata:
+#   name: sql-replica
+# spec:
+#    hosts:
+#      - "postgresql.django-startproject.svc.cluster.local"
+#    ports:
+#      - number: 5432
+#        name: tcp
+#        protocol: TCP
+#    location: MESH_EXTERNAL

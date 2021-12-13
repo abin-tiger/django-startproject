@@ -1,0 +1,29 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istio-controlplane
+spec:
+  profile: default
+  ## The configs given below overrides https://github.com/istio/istio/blob/master/manifests/profiles/default.yaml
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      namespace: istio-system
+    egressGateways:
+    - name: istio-egressgateway
+      enabled: true
+      namespace: istio-system
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enablePrometheusMerge: false
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+    defaultConfig:
+      gatewayTopology:
+        numTrustedProxies: 1
+  values:
+    global:
+      proxy:
+        excludeIPRanges: "169.254.169.254/32"
