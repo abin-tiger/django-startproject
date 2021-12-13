@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: django-startproject
+  namespace: django-startproject
   labels:
     app: django-startproject
 spec:
@@ -13,13 +14,25 @@ spec:
     metadata:
       labels:
         app: django
+      annotations:
+        # sidecar.istio.io/rewriteAppHTTPProbers: "false"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "5432"
     spec:
       containers:
       - name: django
         image: ghcr.io/abin-tiger/django-startproject:main
+        livenessProbe:
+          httpGet:
+            # path: /
+            port: 8000
+        readinessProbe:
+          tcpSocket:
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
         env:
           - name: "POSTGRES_HOST"
-            value: "postgresql"
+            value: "postgresql-headless"
           - name: "POSTGRES_PORT"
             value: "5432"
           - name: "POSTGRES_PASSWORD"
