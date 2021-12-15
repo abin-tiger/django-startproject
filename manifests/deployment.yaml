@@ -6,7 +6,7 @@ metadata:
   labels:
     app: django-startproject
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: django
@@ -18,6 +18,16 @@ spec:
       #   # sidecar.istio.io/rewriteAppHTTPProbers: "false"
       #   traffic.sidecar.istio.io/excludeOutboundPorts: "5432"
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - spark-operator
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: django
         image: ghcr.io/abin-tiger/django-startproject:main
